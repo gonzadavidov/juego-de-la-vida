@@ -24,6 +24,7 @@ void cellsStateUpdate(char actual[ROWS][COLS], char new[ROWS][COLS], char change
 void printScreen(char cells[ROWS][COLS]);
 void clearScreen(void);
 unsigned char getInput(char *str);
+unsigned char commandFinder(char *str, char *command, int *value);
 unsigned int getNewCells(char cells[ROWS][COLS]);
 
 /* Funciones generales */
