@@ -252,13 +252,19 @@ void cellsStateUpdate(unsigned char actual[ROWS][COLS], unsigned char future[ROW
 				{
 					future[row][col] = CELL_DEAD;
 					changes[row][col] = CELL_DYING;
-				}
+				}else
+        {
+					future[row][col] = CELL_ALIVE;
+        }
 			}else{
 				if( cellBorn(actual, row, col) )
 				{
 					future[row][col] = CELL_ALIVE;
 					changes[row][col] = CELL_BORN;
-				}
+				}else
+        {
+					future[row][col] = CELL_DEAD;
+        }
 			}
 		}
 	}
