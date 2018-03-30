@@ -16,7 +16,9 @@
 #define FALSE 0
 
 unsigned char isInside(int row, int col, int maxRow, int maxCol);
-unsigned char verifico(char cells[ROWS][COLS], int row, int col);
+unsigned char cellsAround(char cells[ROWS][COLS], int row, int col);
+unsigned char cellBorn(char cells[ROWS][COLS], int row, int col);
+unsigned char cellDies(char cells[ROWS][COLS], int row, int col);
 void cellsStateUpdate(char actual[ROWS][COLS], char future[ROWS][COLS], char changes[ROWS][COLS]);
 
 int main()
@@ -83,58 +85,88 @@ unsigned char isInside(int row, int col, int maxRow, int maxCol)
 	return FALSE;
 }
 
+unsigned char cellBorn(char cells[ROWS][COLS], int row, int col)
+{
+	/*
+	Esta funcion se fija si la celula en row y col
+	cumple condiciones para nacer
+	*/
+
+	unsigned char countPeriphereal;
+
+	countPeriphereal = cellsAround(cells, row, col);
+
+	if( countPeriphereal == 3 && cells[row][col] == CELL_DEAD ){
+		return TRUE;
+	}
+	return FALSE;
+}
+
+unsigned char cellDies(char cells[ROWS][COLS], int row, int col)
+{
+	/*
+	Esta funcion se fija si la celula en row y col
+	cumple las condiciones para morir
+	*/
+
+	unsigned char countPeripheareal;
+
+	countPeriphereal = cellsAround(cells, row, col);
+	if( cells[row][col] == CELL_ALIVE && (countPeriphereal < 2 || countPeriphereal > 3) )
+	{
+		return TRUE;
+	}
+	return FALSE;
+}
+
 void cellsStateUpdate(char actual[ROWS][COLS], char future[ROWS][COLS], char changes[ROWS][COLS])
 {
-	unsigned char countPeriphereal;	//countPeriphereal se usa para contar la cantidad de celdad adyacentes vivas de la celda en estudio
 	int row, col;			//row y col se usan como indices para recorrer la matriz
 
-	for(row=0 ; row<ROWS ; row++)					//Mediante este bucle for me muevo por las filas
+	for(row = 0 ; row < ROWS ; row++)					//Mediante este bucle for me muevo por las filas
 	{
-		for(col=0 ; col<COLS ; col++)				//Mediante este bucle for me muevo por las columnas
+		for(col = 0 ; col < COLS ; col++)				//Mediante este bucle for me muevo por las columnas
 		{
-			countPeriphereal= verifico(actual, row, col);
-			if(countPeriphereal<2 || countPeriphereal>3)
+			if( cells[row][col] == CELL_ALIVE )
 			{
-				future[row][col]=0;	//si la celda esta rodeada de mas de 3 o menos de 2 celdas vivas, muere
-				changes[row][col] = ((actual[row][col]==0) ? CELL_DEAD : CELL_DYING); //dependiendo del estado anterior de la celda en estudio, si estaba viva indico en la matriz de cambio que la celda muere, sino indico que sigue muerta
-			}
-			else if(countPeriphereal==3)
-			{
-				future[row][col]=1;	//si tiene 3 celdas vecinas vivas (exactas), entonces la celda futura vive
-				changes[row][col] = ((actual[row][col]==1) ? CELL_ALIVE : CELL_BORN);	//dependiendo del estado anterior de la celda en estudio, si estaba muerta indico en la matriz de cambio que la celda revive, sino indico que sigue viva
-			}
-			else
-			{
-				future[row][col] = actual[row][col];	//si tiene 2 celdas vivas entonces mantiene el estado
-				changes[row][col] = ((future[row][col]==1) ? CELL_ALIVE : CELL_DEAD);	//indico en la matriz de cambio que la celda mantiene el mismo valor
+				if( cellDies(cells, row, col) )
+				{
+					future[row][col] = CELL_DEAD;
+					changes[row][col] = CELL_DYING;
+				}
+			}else{
+				if( cellBorn(cells, row, col) )
+				{
+					future[row][col] = CELL_ALIVE;
+					changes[row][col] = CELL_BORN;
+				}
 			}
 		}
 	}
 }
 
-unsigned char verifico(char cells[ROWS][COLS], int row, int col)
+unsigned char cellsAround(char cells[ROWS][COLS], int row, int col)
 {
 	/*
+	Esta funcion cuenta la cantidad de celulas vivas
+	alrededor de la celda indicada por row y col
 	*/
 	unsigned char countPeriphereal = 0;										//countPeriphereal es un contador que contiene la cantidad de celdas vivas alrededor de la celda en estudio.
-	char nextRow = DESPLROW, nextCol = DESPLCOL, value;		//nextRow y nextCol son variables que se utilizan para para de una fila a su adyacente y de una columna a su adyacente respectivamente
-	int offsetRow = 0, offsetCol = 0;											//estas variables se usan para moverme por la matriz de manera indexada respecto de la fila y columna que estoy analizando
+	char nextRow, nextCol;		//nextRow y nextCol son variables que se utilizan para para de una fila a su adyacente y de una columna a su adyacente respectivamente
 
-	for(nextRow = DESPLROW ; (nextRow >= -1) ; nextRow--)
+	for(nextRow = DESPLROW+row ; (nextRow >= row-1) ; nextRow--)
 	{
-		for(nextCol = DESPLCOL ; (nextCol >= -1) ; nextCol--)
+		for(nextCol = DESPLCOL+col ; (nextCol >= col-1) ; nextCol--)
 		{
-			offsetRow = row+nextRow;														//ajusto el ofsset de la fila
-			offsetCol = col+nextCol;														//ajusto el offset de la columna
-
 			/* Las condiciones dentro del bloque if que viene a continuacion verifican que:
 			-El indice de fila y columna que quiero analizar no se vaya del rango (este dentro de la matriz)
 			-Solo se fije en las celdas adyacentes a la celda que quiero analizar
 			*/
-			if( isInside(offsetRow, offsetCol, ROWS, COLS) ){
-				if( offsetRow != row || offsetCol != col ){
-					value = cells[offsetRow][offsetCol];	//leo el valor de la celda (puede ser cualquier cosa
-					countPeriphereal += (value!=0 ? 1 : 0);	//si la celda "leida" esta viva incremento el contador
+			if( isInside(nextRow, nextCol, ROWS, COLS) ){
+				if( nextRow != row || nextCol != col ){
+					if( cells[nextRow][nextCol] == CELL_ALIVE ){
+						countPeriphereal++;
+					}
 				}
 			}
 		}
