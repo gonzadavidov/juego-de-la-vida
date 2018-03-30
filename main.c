@@ -1,6 +1,9 @@
 #include <stdio.h>
 
 /* Constantes del juego de la vida */
+
+#define DESPLROW 1		    //DESPLROW es el desplazamiento que tengo entre una fila y la otra
+#define DESPLCOL 1		    //DESPLCOL es el desplazamiento que tengo entre una celda y la otra
 #define ROWS 10           // Cantidad de filas del mundo 2D
 #define COLS 10           // Cantidad de columnas del mundo 2D
 #define CELL_ALIVE  0xFF  // Cuando una celula esta viva
