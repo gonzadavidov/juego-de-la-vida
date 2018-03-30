@@ -4,14 +4,16 @@
 
 /* Constantes del juego de la vida */
 
-#define DESPLROW 1		    //DESPLROW es el desplazamiento que tengo entre una fila y la otra
-#define DESPLCOL 1		    //DESPLCOL es el desplazamiento que tengo entre una celda y la otra
 #define ROWS 10           // Cantidad de filas del mundo 2D
 #define COLS 10           // Cantidad de columnas del mundo 2D
 #define CELL_ALIVE  0xFF  // Cuando una celula esta viva
 #define CELL_DEAD   0x00  // Cuando una celula esta muerta
 #define CELL_BORN   0xF0  // Cuando una celula acaba de nacer
 #define CELL_DYING  0x0F  // Cuando una celula acaba de morir
+
+#define ACTUAL_CELLS 0
+#define FUTURE_CELLS 1
+#define CHANGED_CELLS 2
 
 #define ERROR    -1       // Como se devuelven errores
 #define NOT_ERROR 0
@@ -44,26 +46,49 @@ unsigned int getNewCells(unsigned char cells[ROWS][COLS]);
 
 /* Funciones generales */
 void createNewCells(unsigned char cells[ROWS][COLS]);
-void copyArray(char *from, char *to, int length);
+void copyArray(unsigned char *from, unsigned char *to, int length);
 void fixChanges(unsigned char cells[ROWS][COLS]);
 
 int main(void)
 {
-  unsigned char cells[ROWS][COLS];
+  unsigned char cells[3][ROWS][COLS];
   int seed;
+  unsigned int stage = 1;
+  char c;
 
   /* Inicializacion de parametros para el programa */
   seed = time(NULL);
   srandom(seed);
-  createNewCells(cells);
-  
-  clearScreen();
-  printScreen(cells, 0);
+  createNewCells(cells[ACTUAL_CELLS]);
+
+  do
+  {
+    clearScreen();
+    printScreen(cells[ACTUAL_CELLS], stage++);
+    cellsStateUpdate(cells[ACTUAL_CELLS], cells[FUTURE_CELLS], cells[CHANGED_CELLS]);
+    copyArray(&cells[FUTURE_CELLS][0][0], &cells[ACTUAL_CELLS][0][0], ROWS*COLS);
+    c = getchar();
+  }while( c != 'Q' );
 
   return 0;
 }
 
 /* Definicion de funciones */
+void copyArray(unsigned char *from, unsigned char *to, int length)
+{
+  /*
+  Copia un arreglo a otro,
+  se puede aplicar a cualquier dimension
+  de arreglos simplemente calculando bien
+  el largo
+  */
+
+  while( length-- )
+  {
+    *to++ = *from++;
+  }
+}
+
 void createNewCells(unsigned char cells[ROWS][COLS])
 {
   /*
@@ -219,11 +244,11 @@ unsigned char cellsAround(unsigned char cells[ROWS][COLS], int row, int col)
 	alrededor de la celda indicada por row y col
 	*/
 	unsigned char countPeriphereal = 0;										//countPeriphereal es un contador que contiene la cantidad de celdas vivas alrededor de la celda en estudio.
-	unsigned char nextRow, nextCol;		//nextRow y nextCol son variables que se utilizan para para de una fila a su adyacente y de una columna a su adyacente respectivamente
+	int nextRow, nextCol;		//nextRow y nextCol son variables que se utilizan para para de una fila a su adyacente y de una columna a su adyacente respectivamente
 
-	for(nextRow = DESPLROW+row ; (nextRow >= row-1) ; nextRow--)
+	for(nextRow = 1+row ; (nextRow >= row-1) ; nextRow--)
 	{
-		for(nextCol = DESPLCOL+col ; (nextCol >= col-1) ; nextCol--)
+		for(nextCol = 1+col ; (nextCol >= col-1) ; nextCol--)
 		{
 			/* Las condiciones dentro del bloque if que viene a continuacion verifican que:
 			-El indice de fila y columna que quiero analizar no se vaya del rango (este dentro de la matriz)
