@@ -6,8 +6,8 @@
 
 #define DESPLROW 1		    //DESPLROW es el desplazamiento que tengo entre una fila y la otra
 #define DESPLCOL 1		    //DESPLCOL es el desplazamiento que tengo entre una celda y la otra
-#define ROWS 3           // Cantidad de filas del mundo 2D
-#define COLS 3           // Cantidad de columnas del mundo 2D
+#define ROWS 10           // Cantidad de filas del mundo 2D
+#define COLS 10           // Cantidad de columnas del mundo 2D
 #define CELL_ALIVE  0xFF  // Cuando una celula esta viva
 #define CELL_DEAD   0x00  // Cuando una celula esta muerta
 #define CELL_BORN   0xF0  // Cuando una celula acaba de nacer
@@ -43,14 +43,20 @@ unsigned char commandFinder(char *str, char *command, int *value);
 unsigned int getNewCells(unsigned char cells[ROWS][COLS]);
 
 /* Funciones generales */
-unsigned int createNewCells(unsigned char cells[ROWS][COLS]);
+void createNewCells(unsigned char cells[ROWS][COLS]);
 void copyArray(char *from, char *to, int length);
 void fixChanges(unsigned char cells[ROWS][COLS]);
 
 int main(void)
 {
-  unsigned char cells[ROWS][COLS] = {{CELL_ALIVE, CELL_BORN, CELL_ALIVE}, {CELL_DEAD, CELL_DYING, CELL_DEAD}, {CELL_DEAD, CELL_ALIVE, CELL_DEAD}};
+  unsigned char cells[ROWS][COLS];
+  int seed;
 
+  /* Inicializacion de parametros para el programa */
+  seed = time(NULL);
+  srandom(seed);
+  createNewCells(cells);
+  
   clearScreen();
   printScreen(cells, 0);
 
@@ -58,6 +64,29 @@ int main(void)
 }
 
 /* Definicion de funciones */
+void createNewCells(unsigned char cells[ROWS][COLS])
+{
+  /*
+  Esta funcion crea una matriz 2D
+  con celulas iniciales ubicadas
+  de forma aleatoria
+  */
+
+  unsigned int i, j;
+
+  for(i = 0 ; i < ROWS ; i++)
+  {
+    for(j = 0 ; j < COLS ; j++)
+    {
+      if( rand() % 2 ){
+        cells[i][j] = CELL_ALIVE;
+      }else{
+        cells[i][j] = CELL_DEAD;
+      }
+    }
+  }
+}
+
 void printScreen(unsigned char cells[ROWS][COLS], unsigned int stage)
 {
   /*
