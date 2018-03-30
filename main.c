@@ -46,8 +46,9 @@ unsigned int getNewCells(unsigned char cells[ROWS][COLS]);
 
 /* Funciones generales */
 void createNewCells(unsigned char cells[ROWS][COLS]);
-void copyArray(unsigned char *from, unsigned char *to, int length);
+void copyArray(unsigned char from[ROWS][COLS], unsigned char to[ROWS][COLS]);
 void fixChanges(unsigned char cells[ROWS][COLS]);
+void cellsInit(unsigned char cells[ROWS][COLS]);
 
 int main(void)
 {
@@ -60,13 +61,14 @@ int main(void)
   seed = time(NULL);
   srandom(seed);
   createNewCells(cells[ACTUAL_CELLS]);
+  cellsInit(cells[FUTURE_CELLS]);
 
   do
   {
     clearScreen();
     printScreen(cells[ACTUAL_CELLS], stage++);
     cellsStateUpdate(cells[ACTUAL_CELLS], cells[FUTURE_CELLS], cells[CHANGED_CELLS]);
-    copyArray(&cells[FUTURE_CELLS][0][0], &cells[ACTUAL_CELLS][0][0], ROWS*COLS);
+    copyArray(cells[FUTURE_CELLS], cells[ACTUAL_CELLS]);
     c = getchar();
   }while( c != 'Q' );
 
@@ -74,7 +76,24 @@ int main(void)
 }
 
 /* Definicion de funciones */
-void copyArray(unsigned char *from, unsigned char *to, int length)
+void cellsInit(unsigned char cells[ROWS][COLS])
+{
+  /*
+  Inicializa un mundo 2D con celulas muertas.
+  */
+
+  unsigned int i, j;
+
+  for(i = 0 ; i < ROWS ; i++)
+  {
+    for(j = 0 ; j < COLS ; j++)
+    {
+      cells[i][j] = CELL_DEAD;
+    }
+  }
+}
+
+void copyArray(unsigned char from[ROWS][COLS], unsigned char to[ROWS][COLS])
 {
   /*
   Copia un arreglo a otro,
@@ -83,9 +102,14 @@ void copyArray(unsigned char *from, unsigned char *to, int length)
   el largo
   */
 
-  while( length-- )
+  unsigned int i,j;
+
+  for(i = 0 ; i < ROWS ; i++)
   {
-    *to++ = *from++;
+    for(j = 0 ; j < COLS ; j++)
+    {
+      to[i][j] = from[i][j];
+    }
   }
 }
 
@@ -142,6 +166,9 @@ void printScreen(unsigned char cells[ROWS][COLS], unsigned int stage)
           break;
         case CELL_ALIVE:
           printf(" * ");
+          break;
+        default:
+          printf("%x", cells[i][j]);
           break;
       }
     }
