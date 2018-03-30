@@ -6,8 +6,8 @@
 
 #define DESPLROW 1		    //DESPLROW es el desplazamiento que tengo entre una fila y la otra
 #define DESPLCOL 1		    //DESPLCOL es el desplazamiento que tengo entre una celda y la otra
-#define ROWS 10           // Cantidad de filas del mundo 2D
-#define COLS 10           // Cantidad de columnas del mundo 2D
+#define ROWS 3           // Cantidad de filas del mundo 2D
+#define COLS 3           // Cantidad de columnas del mundo 2D
 #define CELL_ALIVE  0xFF  // Cuando una celula esta viva
 #define CELL_DEAD   0x00  // Cuando una celula esta muerta
 #define CELL_BORN   0xF0  // Cuando una celula acaba de nacer
@@ -30,32 +30,75 @@
 
 /* Funciones control de cambio entre generaciones */
 unsigned char isInside(int row, int col, int maxRow, int maxCol);
-unsigned char cellsAround(char cells[ROWS][COLS], int row, int col);
-unsigned char cellBorn(char cells[ROWS][COLS], int row, int col);
-unsigned char cellDies(char cells[ROWS][COLS], int row, int col);
-void cellsStateUpdate(char actual[ROWS][COLS], char new[ROWS][COLS], char changes[ROWS][COLS]);
+unsigned char cellsAround(unsigned char cells[ROWS][COLS], int row, int col);
+unsigned char cellBorn(unsigned char cells[ROWS][COLS], int row, int col);
+unsigned char cellDies(unsigned char cells[ROWS][COLS], int row, int col);
+void cellsStateUpdate(unsigned char actual[ROWS][COLS], unsigned char new[ROWS][COLS], unsigned char changes[ROWS][COLS]);
 
 /* Funciones de interaccion con el usuario IO */
-void printScreen(char cells[ROWS][COLS]);
+void printScreen(unsigned char cells[ROWS][COLS], unsigned int stage);
 void clearScreen(void);
 unsigned char getInput(char *str);
 unsigned char commandFinder(char *str, char *command, int *value);
-unsigned int getNewCells(char cells[ROWS][COLS]);
+unsigned int getNewCells(unsigned char cells[ROWS][COLS]);
 
 /* Funciones generales */
-unsigned int createNewCells(char cells[ROWS][COLS]);
+unsigned int createNewCells(unsigned char cells[ROWS][COLS]);
 void copyArray(char *from, char *to, int length);
-void fixChanges(char cells[ROWS][COLS]);
+void fixChanges(unsigned char cells[ROWS][COLS]);
 
 int main(void)
 {
-  printf(ANSI_COLOR_RED "Hola" ANSI_COLOR_RESET "Chau\n");
-  system("clear");
+  unsigned char cells[ROWS][COLS] = {{CELL_ALIVE, CELL_BORN, CELL_ALIVE}, {CELL_DEAD, CELL_DYING, CELL_DEAD}, {CELL_DEAD, CELL_ALIVE, CELL_DEAD}};
+
+  clearScreen();
+  printScreen(cells, 0);
+
   return 0;
 }
 
 /* Definicion de funciones */
-void clearScreen()
+void printScreen(unsigned char cells[ROWS][COLS], unsigned int stage)
+{
+  /*
+  Esta funcion imprime en pantalla el mundo
+  2D de celulas del juego  con el formato
+  que corresponde
+  */
+
+  unsigned int i, j;
+
+  printf("\t\t\t\t[EL JUEGO DE LA VIDA]\n");
+  printf("Generacion N°: %d\n\n", stage);
+
+  for(i = 0 ; i < ROWS ; i++)
+  {
+    for(j = 0 ; j < COLS ; j++)
+    {
+      printf("|");
+      switch( cells[i][j] ){
+        case CELL_DEAD:
+          printf("   ");
+          break;
+        case CELL_BORN:
+          printf(ANSI_COLOR_GREEN " * " ANSI_COLOR_RESET);
+          break;
+        case CELL_DYING:
+          printf(ANSI_COLOR_RED " * " ANSI_COLOR_RESET);
+          break;
+        case CELL_ALIVE:
+          printf(" * ");
+          break;
+      }
+    }
+    printf("|\n");
+  }
+
+  printf("\n\n");
+  printf("Celula *: Viva\t\t" ANSI_COLOR_RED "Celula *: Acaba de morir\t" ANSI_COLOR_GREEN "Celula *: Acaba de nacer" ANSI_COLOR_RESET "\n");
+}
+
+void clearScreen(void)
 {
   /*
   Limpia la pantalla de la terminal
@@ -80,7 +123,7 @@ unsigned char isInside(int row, int col, int maxRow, int maxCol)
 	return FALSE;
 }
 
-unsigned char cellBorn(char cells[ROWS][COLS], int row, int col)
+unsigned char cellBorn(unsigned char cells[ROWS][COLS], int row, int col)
 {
 	/*
 	Esta funcion se fija si la celula en row y col
@@ -97,7 +140,7 @@ unsigned char cellBorn(char cells[ROWS][COLS], int row, int col)
 	return FALSE;
 }
 
-unsigned char cellDies(char cells[ROWS][COLS], int row, int col)
+unsigned char cellDies(unsigned char cells[ROWS][COLS], int row, int col)
 {
 	/*
 	Esta funcion se fija si la celula en row y col
@@ -114,7 +157,7 @@ unsigned char cellDies(char cells[ROWS][COLS], int row, int col)
 	return FALSE;
 }
 
-void cellsStateUpdate(char actual[ROWS][COLS], char future[ROWS][COLS], char changes[ROWS][COLS])
+void cellsStateUpdate(unsigned char actual[ROWS][COLS], unsigned char future[ROWS][COLS], unsigned char changes[ROWS][COLS])
 {
 	int row, col;			//row y col se usan como indices para recorrer la matriz
 
@@ -140,7 +183,7 @@ void cellsStateUpdate(char actual[ROWS][COLS], char future[ROWS][COLS], char cha
 	}
 }
 
-unsigned char cellsAround(char cells[ROWS][COLS], int row, int col)
+unsigned char cellsAround(unsigned char cells[ROWS][COLS], int row, int col)
 {
 	/*
 	Esta funcion cuenta la cantidad de celulas vivas
