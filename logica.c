@@ -21,54 +21,6 @@ unsigned char cellBorn(char cells[ROWS][COLS], int row, int col);
 unsigned char cellDies(char cells[ROWS][COLS], int row, int col);
 void cellsStateUpdate(char actual[ROWS][COLS], char future[ROWS][COLS], char changes[ROWS][COLS]);
 
-int main()
-{
-	int numero1,/* numero2=2, numero3=0, numero4=0, */i, j;
-	char actual[ROWS][COLS], future[ROWS][COLS], changes[ROWS][COLS];
-
-	numero1= rand() %2;
-
-	for(i=0;i<ROWS;i++)
-	{
-		for(j=0;j<COLS;j++)
-		{
-			numero1= rand() %2;
-			actual[i][j]=numero1;
-			printf("%d\t", actual[i][j]);
-			//printf("|\t");
-		}
-		printf("\n");
-	}
-
-
-
-	printf("____________\n");
-
-	cellsStateUpdate(actual, future, changes);
-
-	for(i=0;i<ROWS;i++)
-	{
-		for(j=0;j<COLS;j++)
-		{
-			printf("%d\t", future[i][j]);
-		}
-		printf("\n");
-	}
-
-	printf("____________\n");
-
-	for(i=0;i<ROWS;i++)
-	{
-		for(j=0;j<COLS;j++)
-		{
-			printf("%d\t", changes[i][j]);
-		}
-		printf("\n");
-	}
-
-	return 0;
-}
-
 unsigned char isInside(int row, int col, int maxRow, int maxCol)
 {
 	/*
@@ -77,7 +29,7 @@ unsigned char isInside(int row, int col, int maxRow, int maxCol)
 	*/
 
 	if( row >= 0 && row < maxRow ){
-		if( col >= o && col < maxCol ){
+		if( col >= 0 && col < maxCol ){
 			return TRUE;
 		}
 	}
@@ -109,7 +61,7 @@ unsigned char cellDies(char cells[ROWS][COLS], int row, int col)
 	cumple las condiciones para morir
 	*/
 
-	unsigned char countPeripheareal;
+	unsigned char countPeriphereal;
 
 	countPeriphereal = cellsAround(cells, row, col);
 	if( cells[row][col] == CELL_ALIVE && (countPeriphereal < 2 || countPeriphereal > 3) )
@@ -127,15 +79,15 @@ void cellsStateUpdate(char actual[ROWS][COLS], char future[ROWS][COLS], char cha
 	{
 		for(col = 0 ; col < COLS ; col++)				//Mediante este bucle for me muevo por las columnas
 		{
-			if( cells[row][col] == CELL_ALIVE )
+			if( actual[row][col] == CELL_ALIVE )
 			{
-				if( cellDies(cells, row, col) )
+				if( cellDies(actual, row, col) )
 				{
 					future[row][col] = CELL_DEAD;
 					changes[row][col] = CELL_DYING;
 				}
 			}else{
-				if( cellBorn(cells, row, col) )
+				if( cellBorn(actual, row, col) )
 				{
 					future[row][col] = CELL_ALIVE;
 					changes[row][col] = CELL_BORN;
@@ -152,7 +104,7 @@ unsigned char cellsAround(char cells[ROWS][COLS], int row, int col)
 	alrededor de la celda indicada por row y col
 	*/
 	unsigned char countPeriphereal = 0;										//countPeriphereal es un contador que contiene la cantidad de celdas vivas alrededor de la celda en estudio.
-	char nextRow, nextCol;		//nextRow y nextCol son variables que se utilizan para para de una fila a su adyacente y de una columna a su adyacente respectivamente
+	unsigned char nextRow, nextCol;		//nextRow y nextCol son variables que se utilizan para para de una fila a su adyacente y de una columna a su adyacente respectivamente
 
 	for(nextRow = DESPLROW+row ; (nextRow >= row-1) ; nextRow--)
 	{
