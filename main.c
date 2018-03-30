@@ -33,3 +33,4 @@ unsigned int getNewCells(char cells[ROWS][COLS]);
 /* Funciones generales */
 unsigned int createNewCells(char cells[ROWS][COLS]);
 void copyArray(char *from, char *to, int length);
+void fixChanges(char cells[ROWS][COLS]);
