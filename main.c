@@ -1,4 +1,6 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
 
 /* Constantes del juego de la vida */
 
@@ -16,6 +18,15 @@
 
 #define TRUE  1
 #define FALSE 0
+
+/* Constantes sistema unix */
+#define ANSI_COLOR_RED     "\x1b[31m"
+#define ANSI_COLOR_GREEN   "\x1b[32m"
+#define ANSI_COLOR_YELLOW  "\x1b[33m"
+#define ANSI_COLOR_BLUE    "\x1b[34m"
+#define ANSI_COLOR_MAGENTA "\x1b[35m"
+#define ANSI_COLOR_CYAN    "\x1b[36m"
+#define ANSI_COLOR_RESET   "\x1b[0m"
 
 /* Funciones control de cambio entre generaciones */
 unsigned char isInside(int row, int col, int maxRow, int maxCol);
@@ -36,8 +47,23 @@ unsigned int createNewCells(char cells[ROWS][COLS]);
 void copyArray(char *from, char *to, int length);
 void fixChanges(char cells[ROWS][COLS]);
 
+int main(void)
+{
+  printf(ANSI_COLOR_RED "Hola" ANSI_COLOR_RESET "Chau\n");
+  system("clear");
+  return 0;
+}
 
 /* Definicion de funciones */
+void clearScreen()
+{
+  /*
+  Limpia la pantalla de la terminal
+  */
+
+  system("clear");
+}
+
 unsigned char isInside(int row, int col, int maxRow, int maxCol)
 {
 	/*
