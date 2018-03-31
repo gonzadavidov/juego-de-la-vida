@@ -14,13 +14,11 @@
 
 /* Comandos */
 #define CMD_NONE    0
-#define CMD_ROWS    1
-#define CMD_COLS    2
-#define CMD_START   3
-#define CMD_RESTART 4
-#define CMD_EXIT    5
-#define CMD_CHANGES 6
-#define CMD_AUTO    7
+#define CMD_START   1
+#define CMD_RESTART 2
+#define CMD_EXIT    3
+#define CMD_CHANGES 4
+#define CMD_AUTO    5
 
 /* Identificadores de matriz 2D en la 3D */
 #define ACTUAL_CELLS  0
@@ -201,8 +199,8 @@ void readConsole(int *cmd_id, int *arg)
   */
 
   char input[MAX_LENGTH], cmd_input[MAX_CMD][MAX_LENGTH];
-  char commands[][MAX_LENGTH] = {"","rows", "cols", "start", "restart", "exit", "changes", "auto"};
-  char argExpected[] = {0, 1, 1, 0, 0, 0, 1, 1};
+  char commands[][MAX_LENGTH] = {"", "start", "restart", "exit", "changes", "auto"};
+  char argExpected[] = {0, 0, 0, 0, 1, 1};
   int numberOfWords;
 
   scanf("%[^\n]", input);   // Espero texto hasta que aprete enter
@@ -212,7 +210,7 @@ void readConsole(int *cmd_id, int *arg)
   {
     if( onlyLetters(&cmd_input[0][0]) )
     {
-      *cmd_id = commandFinder(&cmd_input[0][0], commands, 8);
+      *cmd_id = commandFinder(&cmd_input[0][0], commands, 6);
       if( *cmd_id != CMD_NONE )
       {
         if( numberOfWords > 1 && argExpected[*cmd_id] )
