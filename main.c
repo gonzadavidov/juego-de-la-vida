@@ -71,14 +71,18 @@ unsigned char isNumber(char c);
 unsigned char isLetter(char c);
 unsigned char commandFinder(char *str, char cmdList[][MAX_LENGTH], int cmd_length);
 char readConsole(int *cmd_id, int *arg);
+unsigned int toNumber(char *str);
 
 int main(void)
 {
   unsigned char cells[3][ROWS][COLS];
   int seed;
   unsigned int stage = 1;
+  int cmd_id, arg;
+
   char c, step = SHOW_GENERATION;
 
+  printf("");
   /* Inicializacion de parametros para el programa */
 /*
   seed = time(NULL);
@@ -111,6 +115,25 @@ int main(void)
 }
 
 /* Definicion de funciones */
+unsigned int toNumber(char *str)
+{
+  /*
+  Convierte el string con numeros ascii
+  en una variable entera con el mismo numero
+  */
+
+  unsigned int number = 0;
+  unsigned char c;
+
+  while( *str )
+  {
+      c = *str++ - '0';
+      number *= 10;
+      number += c;
+  }
+
+  return number;
+}
 char readConsole(int *cmd_id, int *arg)
 {
   /*
@@ -140,8 +163,9 @@ char readConsole(int *cmd_id, int *arg)
       {
         if( numberOfWords > 1 && argExpected[*cmd_id] )
         {
-          if( onlyNumbers(%cmd_input[0][1]) )
+          if( onlyNumbers(&cmd_input[0][1]) )
           {
+            *arg = toNumber(&cmd_input[0][1]);
             return NOT_ERROR;
           }
         }else if( numberOfWords == 1 && !argExpected[*cmd_id]  )
