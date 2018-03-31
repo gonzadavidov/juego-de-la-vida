@@ -498,7 +498,7 @@ void printScreen(unsigned char cells[ROWS][COLS], unsigned int stage)
   printf("\tstart: Iniciar el juego\n");
   printf("\tauto n: Saltar n generaciones\n");
   printf("\tchanges 0/1: Desactivar/Activar mostrar cambios entre generacion\n");
-  printf("\tCualquier otra cosa cambia a la proxima generacion\n");
+  printf("Cualquier otra cosa cambia a la proxima generacion\n");
   printf("\n\n[COMANDO] -> ");
 }
 
