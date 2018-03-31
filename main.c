@@ -76,7 +76,7 @@ int main(void)
   unsigned char cells[3][ROWS][COLS], cellBoard[ROWS][COLS];
   int seed, cmd_id = 0, arg = 0;
   unsigned int stage = 0;
-  unsigned char finish = FALSE, showChanges = FALSE;
+  unsigned char finish = FALSE, showChanges = TRUE, newGeneration = FALSE;
 
   /* Inicializacion de parametros para el programa */
   seed = time(NULL);
@@ -94,29 +94,45 @@ int main(void)
     clearBuffer();
 
     switch( cmd_id ){
+      case CMD_CHANGES:
+        if( arg )
+        {
+          showChanges = TRUE;
+          copyArray(cells[ACTUAL_CELLS], cells[CHANGED_CELLS]);
+        }else
+        {
+          showChanges = FALSE;
+        }
+        break;
       case CMD_EXIT:
         finish = TRUE;
         break;
       case CMD_START: case CMD_RESTART:
         createNewCells(cells[ACTUAL_CELLS]);
         cellsInit(cells[FUTURE_CELLS]);
-        cellsInit(cells[CHANGED_CELLS]);
+        copyArray(cells[ACTUAL_CELLS], cells[CHANGED_CELLS]);
         copyArray(cells[ACTUAL_CELLS], cellBoard);
         stage = 1;
         break;
       default:
-        if( !showChanges )
+        if( !newGeneration || !showChanges )
         {
           cellsStateUpdate(cells[ACTUAL_CELLS], cells[FUTURE_CELLS], cells[CHANGED_CELLS]);
           copyArray(cells[FUTURE_CELLS], cells[ACTUAL_CELLS]);
-          copyArray(cells[CHANGED_CELLS], cellBoard);
+          if( showChanges )
+          {
+            copyArray(cells[CHANGED_CELLS], cellBoard);
+          }else
+          {
+            copyArray(cells[ACTUAL_CELLS], cellBoard);
+          }
           stage++;
         }else
         {
           fixChanges(cells[CHANGED_CELLS]);
           copyArray(cells[ACTUAL_CELLS], cellBoard);
         }
-        showChanges = ~showChanges;
+        newGeneration = ~newGeneration;
         break;
     }
   }
