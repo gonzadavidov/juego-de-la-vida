@@ -21,7 +21,7 @@
 #define CMD_AUTO    5
 
 /* Identificadores de matriz 2D en la 3D */
-#define ACTUAL_CELLS  0
+#define CURRENT_CELLS  0
 #define FUTURE_CELLS  1
 #define CHANGED_CELLS 2
 
@@ -44,7 +44,7 @@ unsigned char isInside(int row, int col, int maxRow, int maxCol);
 unsigned char cellsAround(unsigned char cells[ROWS][COLS], int row, int col);
 unsigned char cellBorn(unsigned char cells[ROWS][COLS], int row, int col);
 unsigned char cellDies(unsigned char cells[ROWS][COLS], int row, int col);
-void cellsStateUpdate(unsigned char actual[ROWS][COLS], unsigned char new[ROWS][COLS], unsigned char changes[ROWS][COLS]);
+void cellsStateUpdate(unsigned char CURRENT[ROWS][COLS], unsigned char new[ROWS][COLS], unsigned char changes[ROWS][COLS]);
 
 /* Funciones de interaccion con el usuario IO */
 void printScreen(unsigned char cells[ROWS][COLS], unsigned int stage);
@@ -79,37 +79,37 @@ int main(void)
   srandom(seed);
   cellsInit(cells[FUTURE_CELLS]);
   cellsInit(cells[CHANGED_CELLS]);
-  cellsInit(cells[ACTUAL_CELLS]);
+  cellsInit(cells[CURRENT_CELLS]);
   cellsInit(cellBoard);
 
   while( !finish )
   {
-    clearScreen();
-    printScreen(cellBoard, stage);
-    readConsole(&cmd_id, &arg);
-    clearBuffer();
+    clearScreen();                    // limpio la pantalla
+    printScreen(cellBoard, stage);    // e imprimo el nuevo estado de ella
+    readConsole(&cmd_id, &arg);       // espero recibir ingreso de teclado
+    clearBuffer();                    // limpio el buffer
 
     do
     {
       if( autoMode && !arg )
       {
-        autoMode = FALSE;
+        autoMode = FALSE;             // si repeti todo, apago auto mode
       }else if( autoMode )
       {
-        arg--;
+        arg--;                       // en auto mode, decremento la cantidad de repeticiones
       }
 
-      switch( cmd_id ){
+      switch( cmd_id ){           // segun cual sea el comando ingresado
         case CMD_AUTO:
           cmd_id = CMD_NONE;
           arg = arg*2 - 1;
-          autoMode = TRUE;
+          autoMode = TRUE;      // activo el modo automatico
           break;
         case CMD_CHANGES:
           if( arg )
           {
-            showChanges = TRUE;
-            copyArray(cells[ACTUAL_CELLS], cells[CHANGED_CELLS]);
+            showChanges = TRUE;     // activo mostrar los cambios
+            copyArray(cells[CURRENT_CELLS], cells[CHANGED_CELLS]);  //CURRENTizo esa matriz
           }else
           {
             showChanges = FALSE;
@@ -121,32 +121,32 @@ int main(void)
         case CMD_START: case CMD_RESTART:
           if( cmd_id == CMD_RESTART || (cmd_id == CMD_START && !stage) )
           {
-            createNewCells(cells[ACTUAL_CELLS]);
-            cellsInit(cells[FUTURE_CELLS]);
-            copyArray(cells[ACTUAL_CELLS], cells[CHANGED_CELLS]);
-            copyArray(cells[ACTUAL_CELLS], cellBoard);
-            stage = 1;
+            createNewCells(cells[CURRENT_CELLS]);  // creo al azar un nuevo estado inicial
+            cellsInit(cells[FUTURE_CELLS]);   // inicio la proxima generacion
+            copyArray(cells[CURRENT_CELLS], cells[CHANGED_CELLS]);
+            copyArray(cells[CURRENT_CELLS], cellBoard);  // mando a pantalla la CURRENT
+            stage = 1;  // inicializo numero de generacion
           }
           break;
         default:
           if( stage )
           {
-            if( !newGeneration || !showChanges )
+            if( !newGeneration || !showChanges )    // si hay que generar proxima generacion
             {
-              cellsStateUpdate(cells[ACTUAL_CELLS], cells[FUTURE_CELLS], cells[CHANGED_CELLS]);
-              copyArray(cells[FUTURE_CELLS], cells[ACTUAL_CELLS]);
-              if( showChanges )
+              cellsStateUpdate(cells[CURRENT_CELLS], cells[FUTURE_CELLS], cells[CHANGED_CELLS]); // cambios de generacion
+              copyArray(cells[FUTURE_CELLS], cells[CURRENT_CELLS]);  // CURRENTizo el estado CURRENT
+              if( showChanges ) // si estoy en modo mostrar los cambios
               {
                 copyArray(cells[CHANGED_CELLS], cellBoard);
               }else
               {
-                copyArray(cells[ACTUAL_CELLS], cellBoard);
+                copyArray(cells[CURRENT_CELLS], cellBoard);
               }
               stage++;
             }else
             {
-              fixChanges(cells[CHANGED_CELLS]);
-              copyArray(cells[ACTUAL_CELLS], cellBoard);
+              fixChanges(cells[CHANGED_CELLS]);   // arreglo para no pisar entre generaciones los cambios
+              copyArray(cells[CURRENT_CELLS], cellBoard);
             }
             newGeneration = ~newGeneration;
           }
@@ -167,7 +167,7 @@ void clearBuffer(void)
   por teclado
   */
 
-  while( getchar() != '\n' );
+  while( getchar() != '\n' ); //limpio el buffer
 }
 
 unsigned int toNumber(char *str)
@@ -182,9 +182,9 @@ unsigned int toNumber(char *str)
 
   while( *str )
   {
-      c = *str++ - '0';
-      number *= 10;
-      number += c;
+      c = *str++ - '0'; // convierto a numero el ascii
+      number *= 10;   // empujo el numero a la izquierda
+      number += c;    // y agrego el nuevo entero
   }
 
   return number;
@@ -209,26 +209,26 @@ void readConsole(int *cmd_id, int *arg)
   numberOfWords = splitStr(cmd_input, input, ' ', MAX_CMD); // Lo separo en partes por espacios
   if( numberOfWords != ERROR )
   {
-    if( onlyLetters(&cmd_input[0][0]) )
+    if( onlyLetters(&cmd_input[0][0]) )     // me fijo que el comando tenga solo letras
     {
-      *cmd_id = commandFinder(&cmd_input[0][0], commands, 6);
+      *cmd_id = commandFinder(&cmd_input[0][0], commands, 6); // identifico el comando
       if( *cmd_id != CMD_NONE )
       {
-        if( numberOfWords > 1 && argExpected[*cmd_id] )
+        if( numberOfWords > 1 && argExpected[*cmd_id] ) // si espera argumento, y los recibe
         {
-          if( onlyNumbers(&cmd_input[1][0]) )
+          if( onlyNumbers(&cmd_input[1][0]) )   // me fijo que sea numerico
           {
-            *arg = toNumber(&cmd_input[1][0]);
+            *arg = toNumber(&cmd_input[1][0]);    // y lo guardo
           }else
           {
             *cmd_id = CMD_NONE;
           }
-        }else if( numberOfWords > 1 && !argExpected[*cmd_id] )
+        }else if( numberOfWords > 1 && !argExpected[*cmd_id] )  // si recibe y no esperaba argumentos
         {
           *cmd_id = CMD_NONE;
-        }else if( numberOfWords == 1 && argExpected[*cmd_id]  )
+        }else if( numberOfWords == 1 && argExpected[*cmd_id]  ) // o si no recibe, pero esperaba
         {
-          *cmd_id = CMD_NONE;
+          *cmd_id = CMD_NONE;   // se toma como que no hubo comando, para que siga a otra generacion
         }
       }
     }else
@@ -252,9 +252,9 @@ unsigned char commandFinder(char *str, char cmdList[][MAX_LENGTH], int cmd_lengt
   for(i = 0 ; i < cmd_length && !found ; i++)
   {
     j = 0;
-    while( str[j] && cmdList[i][j] && str[j] == cmdList[i][j] )
-    {
-      j++;
+    while( str[j] && cmdList[i][j] && str[j] == cmdList[i][j] )   // comparo caracter a caracter
+    {                                                             // el string recibido con los strings
+      j++;                                                          // de la lista de comandos
     }
     if( !str[j] && !cmdList[i][j] )
     {
@@ -267,7 +267,7 @@ unsigned char commandFinder(char *str, char cmdList[][MAX_LENGTH], int cmd_lengt
     return CMD_NONE;
   }else
   {
-    return i-1;
+    return i-1;                           // devuelvo el indice del comando en la lista, para identificarlo
   }
 }
 
@@ -308,7 +308,7 @@ unsigned char onlyNumbers(char *str)
 
   while( *str && check )
   {
-    check = isNumber( *str++ );
+    check = isNumber( *str++ );   // me fijo que sea numero
   }
 
   return check;
@@ -324,7 +324,7 @@ unsigned char onlyLetters(char *str)
 
   while( *str && check )
   {
-    check = isLetter( *str++ );
+    check = isLetter( *str++ ); // me fijo que sea letra
   }
 
   return check;
@@ -341,26 +341,26 @@ int splitStr(char words[][MAX_LENGTH], char *str, char separator, int max)
   */
 
   unsigned int i = 0, j = 0;
-  while( *str && i < max && j < MAX_LENGTH )
-  {
-    if( *str == separator )
+  while( *str && i < max && j < MAX_LENGTH )    // Mientras estoy en el string
+  {                                         // y la palabra la cantidad de palabras no pase el limite
+    if( *str == separator )                 // si encuentro un separador de palabras
     {
-      words[i++][j] = '\0';
+      words[i++][j] = '\0';               // cierro palabra y tomo la proxima
       j = 0;
     }else
     {
-      words[i][j++] = *str;
+      words[i][j++] = *str;               // llega caracter, lo guardo en palabra
     }
     str++;
   }
 
-  if( i >= max || j >= MAX_LENGTH )
-  {
+  if( i >= max || j >= MAX_LENGTH )        // si me pase de largo en palabra o cantidad de palabras
+  {                                         // hay error
     return ERROR;
   }else
   {
-    words[i][j] = '\0';
-    return i+1;
+    words[i][j] = '\0';                     // si no hubo error, cierro la ultima palabra
+    return i+1;                               // y devuelvo la cantidad de palabras separadas
   }
 }
 
@@ -384,8 +384,8 @@ void fixChanges(unsigned char cells[ROWS][COLS])
         cells[i][j] = CELL_ALIVE;
       }else if( cells[i][j] == CELL_DYING )
       {
-        cells[i][j] = CELL_DEAD;
-      }
+        cells[i][j] = CELL_DEAD;  // CURRENTizo a muerta o viva los cambios
+      }                           // Para que entre varias generaciones no se pisen
     }
   }
 }
@@ -402,7 +402,7 @@ void cellsInit(unsigned char cells[ROWS][COLS])
   {
     for(j = 0 ; j < COLS ; j++)
     {
-      cells[i][j] = CELL_DEAD;
+      cells[i][j] = CELL_DEAD;    // Inicio todos los elementos de la matriz
     }
   }
 }
@@ -422,7 +422,7 @@ void copyArray(unsigned char from[ROWS][COLS], unsigned char to[ROWS][COLS])
   {
     for(j = 0 ; j < COLS ; j++)
     {
-      to[i][j] = from[i][j];
+      to[i][j] = from[i][j];    // Voy elemento a elemento copiando
     }
   }
 }
@@ -441,8 +441,8 @@ void createNewCells(unsigned char cells[ROWS][COLS])
   {
     for(j = 0 ; j < COLS ; j++)
     {
-      if( rand() % 2 ){
-        cells[i][j] = CELL_ALIVE;
+      if( rand() % 2 ){             // Decide de forma aleatorioa
+        cells[i][j] = CELL_ALIVE;   // Si la celula inicialmente vive o muere
       }else{
         cells[i][j] = CELL_DEAD;
       }
@@ -559,7 +559,7 @@ unsigned char cellDies(unsigned char cells[ROWS][COLS], int row, int col)
 	return FALSE;
 }
 
-void cellsStateUpdate(unsigned char actual[ROWS][COLS], unsigned char future[ROWS][COLS], unsigned char changes[ROWS][COLS])
+void cellsStateUpdate(unsigned char CURRENT[ROWS][COLS], unsigned char future[ROWS][COLS], unsigned char changes[ROWS][COLS])
 {
 	int row, col;			//row y col se usan como indices para recorrer la matriz
 
@@ -567,18 +567,18 @@ void cellsStateUpdate(unsigned char actual[ROWS][COLS], unsigned char future[ROW
 	{
 		for(col = 0 ; col < COLS ; col++)				//Mediante este bucle for me muevo por las columnas
 		{
-			if( actual[row][col] == CELL_ALIVE )
+			if( CURRENT[row][col] == CELL_ALIVE )
 			{
-				if( cellDies(actual, row, col) )
+				if( cellDies(CURRENT, row, col) )
 				{
-					future[row][col] = CELL_DEAD;
-					changes[row][col] = CELL_DYING;
+					future[row][col] = CELL_DEAD;    //Si celula muere, cambio proxima generacion
+					changes[row][col] = CELL_DYING;  //Y lo muestro en cambios
 				}else
         {
 					future[row][col] = CELL_ALIVE;
         }
 			}else{
-				if( cellBorn(actual, row, col) )
+				if( cellBorn(CURRENT, row, col) )
 				{
 					future[row][col] = CELL_ALIVE;
 					changes[row][col] = CELL_BORN;
