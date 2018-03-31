@@ -56,6 +56,7 @@ void cellsInit(unsigned char cells[ROWS][COLS]);
 void cmdLine(void);
 int splitStr(char words[][MAX_LENGTH], char *str, char separator, int max);
 unsigned char isValid(char *str);
+unsigned char isAlphanumeric(char c);
 unsigned char commandFinder(char *str, char *command, int *value);
 
 int main(void)
@@ -96,6 +97,37 @@ int main(void)
 }
 
 /* Definicion de funciones */
+unsigned char isAlphanumeric(char c)
+{
+  /*
+  Comprueba que el caracter
+  sea el ascii de una letra o numero
+  */
+
+  if( c < 'a' || c > 'z' )
+  {
+    if( c < 'A' || c > 'Z' )
+    {
+      if( c < '0' || c > '9' )
+      {
+        return FALSE;
+      }
+    }
+  }
+  return TRUE;
+
+}
+
+unsigned char isValid(char *str)
+{
+  /*
+  Verifica que el string sea valido, es decir,
+  contenga unicamente solo letras o numeros
+  */
+
+  while( *str )
+}
+
 int splitStr(char words[][MAX_LENGTH], char *str, char separator, int max)
 {
   /*
