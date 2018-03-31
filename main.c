@@ -4,6 +4,7 @@
 
 /* Constantes del juego de la vida */
 
+#define MAX_LENGTH  20    // Maximo largo de comandos
 #define ROWS        15    // Cantidad de filas del mundo 2D
 #define COLS        15    // Cantidad de columnas del mundo 2D
 #define CELL_ALIVE  0xFF  // Cuando una celula esta viva
@@ -43,8 +44,6 @@ void cellsStateUpdate(unsigned char actual[ROWS][COLS], unsigned char new[ROWS][
 /* Funciones de interaccion con el usuario IO */
 void printScreen(unsigned char cells[ROWS][COLS], unsigned int stage);
 void clearScreen(void);
-unsigned char getInput(char *str);
-unsigned char commandFinder(char *str, char *command, int *value);
 unsigned int getNewCells(unsigned char cells[ROWS][COLS]);
 
 /* Funciones generales */
@@ -52,7 +51,12 @@ void createNewCells(unsigned char cells[ROWS][COLS]);
 void copyArray(unsigned char from[ROWS][COLS], unsigned char to[ROWS][COLS]);
 void fixChanges(unsigned char cells[ROWS][COLS]);
 void cellsInit(unsigned char cells[ROWS][COLS]);
+
+/* Funciones para linea de comando */
 void cmdLine(void);
+int splitStr(char words[][MAX_LENGTH], char *str, char separator, int max);
+unsigned char isValid(char *str);
+unsigned char commandFinder(char *str, char *command, int *value);
 
 int main(void)
 {
@@ -92,6 +96,40 @@ int main(void)
 }
 
 /* Definicion de funciones */
+int splitStr(char words[][MAX_LENGTH], char *str, char separator, int max)
+{
+  /*
+  Separa un string en varios string
+  dentro de una matriz separandolo segun
+  un separador.
+  Si supera maximo de palabras, error.
+  Si algun string supera el largo maximo, error.
+  */
+
+  unsigned int i = 0, j = 0;
+
+  while( *str && i < max && j < MAX_LENGTH )
+  {
+    if( *str == separator )
+    {
+      words[i++][j] = '\0';
+    }else
+    {
+      words[i][j++] = *str;
+    }
+    str++;
+  }
+
+  if( i >= max || j >= MAX_LENGTH )
+  {
+    return ERROR;
+  }else
+  {
+    words[i][j] = '\0';
+    return i+1;
+  }
+}
+
 void cmdLine(void)
 {
   unsigned int i;
