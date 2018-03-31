@@ -186,11 +186,11 @@ void delay(int delayTime)
   clock_t t1, t2;
   long int dif;
 
-  t1 = clock();
+  t1 = clock(); // tomo la cantidad de ciclos al inicio
   do
   {
-    t2 = clock();
-    dif = ((t2 - t1) * 1000) / CLOCKS_PER_SEC;
+    t2 = clock(); // cantidad de ciclos al momento
+    dif = ((t2 - t1) * 1000) / CLOCKS_PER_SEC;  // la diferencia, calculo los milisegundos
   }while( dif < delayTime );
 }
 
