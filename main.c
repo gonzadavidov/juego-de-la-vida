@@ -76,7 +76,7 @@ int main(void)
   unsigned char cells[3][ROWS][COLS], cellBoard[ROWS][COLS];
   int seed, cmd_id = 0, arg = 0;
   unsigned int stage = 0;
-  unsigned char finish = FALSE, showChanges = TRUE, newGeneration = FALSE;
+  unsigned char finish = FALSE, showChanges = TRUE, newGeneration = FALSE, autoMode = FALSE;
 
   /* Inicializacion de parametros para el programa */
   seed = time(NULL);
@@ -93,51 +93,67 @@ int main(void)
     readConsole(&cmd_id, &arg);
     clearBuffer();
 
-    switch( cmd_id ){
-      case CMD_CHANGES:
-        if( arg )
-        {
-          showChanges = TRUE;
-          copyArray(cells[ACTUAL_CELLS], cells[CHANGED_CELLS]);
-        }else
-        {
-          showChanges = FALSE;
-        }
-        break;
-      case CMD_EXIT:
-        finish = TRUE;
-        break;
-      case CMD_START: case CMD_RESTART:
-        if( cmd_id == CMD_RESTART || (cmd_id == CMD_START && !stage) )
-        {
-          createNewCells(cells[ACTUAL_CELLS]);
-          cellsInit(cells[FUTURE_CELLS]);
-          copyArray(cells[ACTUAL_CELLS], cells[CHANGED_CELLS]);
-          copyArray(cells[ACTUAL_CELLS], cellBoard);
-          stage = 1;
-        }
-        break;
-      default:
-        if( !newGeneration || !showChanges )
-        {
-          cellsStateUpdate(cells[ACTUAL_CELLS], cells[FUTURE_CELLS], cells[CHANGED_CELLS]);
-          copyArray(cells[FUTURE_CELLS], cells[ACTUAL_CELLS]);
-          if( showChanges )
+    do
+    {
+      if( autoMode && !arg )
+      {
+        autoMode = FALSE;
+      }else if( autoMode )
+      {
+        arg--;
+      }
+
+      switch( cmd_id ){
+        case CMD_AUTO:
+          cmd_id = CMD_NONE;
+          arg = arg*2 - 1;
+          autoMode = TRUE;
+          break;
+        case CMD_CHANGES:
+          if( arg )
           {
-            copyArray(cells[CHANGED_CELLS], cellBoard);
+            showChanges = TRUE;
+            copyArray(cells[ACTUAL_CELLS], cells[CHANGED_CELLS]);
           }else
           {
+            showChanges = FALSE;
+          }
+          break;
+        case CMD_EXIT:
+          finish = TRUE;
+          break;
+        case CMD_START: case CMD_RESTART:
+          if( cmd_id == CMD_RESTART || (cmd_id == CMD_START && !stage) )
+          {
+            createNewCells(cells[ACTUAL_CELLS]);
+            cellsInit(cells[FUTURE_CELLS]);
+            copyArray(cells[ACTUAL_CELLS], cells[CHANGED_CELLS]);
+            copyArray(cells[ACTUAL_CELLS], cellBoard);
+            stage = 1;
+          }
+          break;
+        default:
+          if( !newGeneration || !showChanges )
+          {
+            cellsStateUpdate(cells[ACTUAL_CELLS], cells[FUTURE_CELLS], cells[CHANGED_CELLS]);
+            copyArray(cells[FUTURE_CELLS], cells[ACTUAL_CELLS]);
+            if( showChanges )
+            {
+              copyArray(cells[CHANGED_CELLS], cellBoard);
+            }else
+            {
+              copyArray(cells[ACTUAL_CELLS], cellBoard);
+            }
+            stage++;
+          }else
+          {
+            fixChanges(cells[CHANGED_CELLS]);
             copyArray(cells[ACTUAL_CELLS], cellBoard);
           }
-          stage++;
-        }else
-        {
-          fixChanges(cells[CHANGED_CELLS]);
-          copyArray(cells[ACTUAL_CELLS], cellBoard);
-        }
-        newGeneration = ~newGeneration;
-        break;
-    }
+          newGeneration = ~newGeneration;
+          break;
+      }
+    }while( autoMode );
   }
 
   clearScreen();
@@ -192,7 +208,6 @@ void readConsole(int *cmd_id, int *arg)
   scanf("%[^\n]", input);   // Espero texto hasta que aprete enter
 
   numberOfWords = splitStr(cmd_input, input, ' ', MAX_CMD); // Lo separo en partes por espacios
-
   if( numberOfWords != ERROR )
   {
     if( onlyLetters(&cmd_input[0][0]) )
@@ -248,7 +263,7 @@ unsigned char commandFinder(char *str, char cmdList[][MAX_LENGTH], int cmd_lengt
     }
   }
 
-  if( i >= cmd_length )
+  if( i > cmd_length )
   {
     return CMD_NONE;
   }else
