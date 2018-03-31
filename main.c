@@ -90,8 +90,8 @@ int main(void)
   {
     clearScreen();
     printScreen(cellBoard, stage);
-    clearBuffer();
     readConsole(&cmd_id, &arg);
+    clearBuffer();
 
     switch( cmd_id ){
       case CMD_EXIT:
