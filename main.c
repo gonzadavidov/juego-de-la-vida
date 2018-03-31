@@ -31,8 +31,6 @@
 #define NOT_ERROR       0
 #define TRUE            1
 #define FALSE           0
-#define SHOW_GENERATION 0
-#define SHOW_CHANGES    1
 
 /* Constantes sistema unix */
 #define ANSI_COLOR_RED     "\x1b[31m"
@@ -54,7 +52,7 @@ void cellsStateUpdate(unsigned char actual[ROWS][COLS], unsigned char new[ROWS][
 /* Funciones de interaccion con el usuario IO */
 void printScreen(unsigned char cells[ROWS][COLS], unsigned int stage);
 void clearScreen(void);
-unsigned int getNewCells(unsigned char cells[ROWS][COLS]);
+void clearBuffer(void);
 
 /* Funciones generales */
 void createNewCells(unsigned char cells[ROWS][COLS]);
@@ -70,57 +68,74 @@ unsigned char onlyLetters(char *str);
 unsigned char isNumber(char c);
 unsigned char isLetter(char c);
 unsigned char commandFinder(char *str, char cmdList[][MAX_LENGTH], int cmd_length);
-char readConsole(int *cmd_id, int *arg);
+void readConsole(int *cmd_id, int *arg);
 unsigned int toNumber(char *str);
 
 int main(void)
 {
-  unsigned char cells[3][ROWS][COLS];
-  int seed;
-  unsigned int stage = 1;
-  int cmd_id = 0, arg = 0;
+  unsigned char cells[3][ROWS][COLS], cellBoard[ROWS][COLS];
+  int seed, cmd_id = 0, arg = 0;
+  unsigned int stage = 0;
+  unsigned char finish = FALSE, showChanges = FALSE;
 
-  char c, step = SHOW_GENERATION;
-  printf("Comando: ");
-  if( readConsole(&cmd_id, &arg) == NOT_ERROR )
-  {
-    printf("Comando id: %d\nArgumento: %d\n", cmd_id, arg);
-  }else
-  {
-    printf("Hubo un error!\n");
-  }
   /* Inicializacion de parametros para el programa */
-/*
   seed = time(NULL);
   srandom(seed);
-  createNewCells(cells[ACTUAL_CELLS]);
   cellsInit(cells[FUTURE_CELLS]);
-  copyArray(cells[ACTUAL_CELLS], cells[CHANGED_CELLS]);
+  cellsInit(cells[CHANGED_CELLS]);
+  cellsInit(cells[ACTUAL_CELLS]);
+  cellsInit(cellBoard);
 
-  do
+  while( !finish )
   {
     clearScreen();
-    switch( step )
-    {
-      case SHOW_GENERATION:
-        printScreen(cells[ACTUAL_CELLS], stage++);
-        cellsStateUpdate(cells[ACTUAL_CELLS], cells[FUTURE_CELLS], cells[CHANGED_CELLS]);
-        copyArray(cells[FUTURE_CELLS], cells[ACTUAL_CELLS]);
-        step = SHOW_CHANGES;
+    printScreen(cellBoard, stage);
+    clearBuffer();
+    readConsole(&cmd_id, &arg);
+
+    switch( cmd_id ){
+      case CMD_EXIT:
+        finish = TRUE;
         break;
-      case SHOW_CHANGES:
-        printScreen(cells[CHANGED_CELLS], stage);
-        fixChanges(cells[CHANGED_CELLS]);
-        step = SHOW_GENERATION;
+      case CMD_START: case CMD_RESTART:
+        createNewCells(cells[ACTUAL_CELLS]);
+        cellsInit(cells[FUTURE_CELLS]);
+        cellsInit(cells[CHANGED_CELLS]);
+        copyArray(cells[ACTUAL_CELLS], cellBoard);
+        stage = 1;
+        break;
+      default:
+        if( !showChanges )
+        {
+          cellsStateUpdate(cells[ACTUAL_CELLS], cells[FUTURE_CELLS], cells[CHANGED_CELLS]);
+          copyArray(cells[FUTURE_CELLS], cells[ACTUAL_CELLS]);
+          copyArray(cells[CHANGED_CELLS], cellBoard);
+          stage++;
+        }else
+        {
+          fixChanges(cells[CHANGED_CELLS]);
+          copyArray(cells[ACTUAL_CELLS], cellBoard);
+        }
+        showChanges = ~showChanges;
         break;
     }
-    c = getchar();
-  }while( c != 'Q' );
-*/
+  }
+
+  clearScreen();
   return 0;
 }
 
 /* Definicion de funciones */
+void clearBuffer(void)
+{
+  /*
+  Limpia el buffer de ingreso
+  por teclado
+  */
+
+  while( getchar() != '\n' );
+}
+
 unsigned int toNumber(char *str)
 {
   /*
@@ -140,7 +155,8 @@ unsigned int toNumber(char *str)
 
   return number;
 }
-char readConsole(int *cmd_id, int *arg)
+
+void readConsole(int *cmd_id, int *arg)
 {
   /*
   Esta funcion espera el ingreso
@@ -163,26 +179,30 @@ char readConsole(int *cmd_id, int *arg)
     if( onlyLetters(&cmd_input[0][0]) )
     {
       *cmd_id = commandFinder(&cmd_input[0][0], commands, 8);
-      if( *cmd_id == CMD_NONE ){
-        return NOT_ERROR;
-      }else
+      if( *cmd_id != CMD_NONE )
       {
         if( numberOfWords > 1 && argExpected[*cmd_id] )
         {
           if( onlyNumbers(&cmd_input[1][0]) )
           {
             *arg = toNumber(&cmd_input[1][0]);
-            return NOT_ERROR;
+          }else
+          {
+            *cmd_id = CMD_NONE;
           }
-        }else if( numberOfWords == 1 && !argExpected[*cmd_id]  )
+        }else if( numberOfWords > 1 && !argExpected[*cmd_id] )
         {
-          return NOT_ERROR;
+          *cmd_id = CMD_NONE;
+        }else if( numberOfWords == 1 && argExpected[*cmd_id]  )
+        {
+          *cmd_id = CMD_NONE;
         }
       }
+    }else
+    {
+      *cmd_id = CMD_NONE;
     }
   }
-
-  return ERROR;
 }
 
 unsigned char commandFinder(char *str, char cmdList[][MAX_LENGTH], int cmd_length)
