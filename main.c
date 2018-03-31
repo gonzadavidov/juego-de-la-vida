@@ -78,11 +78,17 @@ int main(void)
   unsigned char cells[3][ROWS][COLS];
   int seed;
   unsigned int stage = 1;
-  int cmd_id, arg;
+  int cmd_id = 0, arg = 0;
 
   char c, step = SHOW_GENERATION;
-
-  printf("");
+  printf("Comando: ");
+  if( readConsole(&cmd_id, &arg) == NOT_ERROR )
+  {
+    printf("Comando id: %d\nArgumento: %d\n", cmd_id, arg);
+  }else
+  {
+    printf("Hubo un error!\n");
+  }
   /* Inicializacion de parametros para el programa */
 /*
   seed = time(NULL);
@@ -163,9 +169,9 @@ char readConsole(int *cmd_id, int *arg)
       {
         if( numberOfWords > 1 && argExpected[*cmd_id] )
         {
-          if( onlyNumbers(&cmd_input[0][1]) )
+          if( onlyNumbers(&cmd_input[1][0]) )
           {
-            *arg = toNumber(&cmd_input[0][1]);
+            *arg = toNumber(&cmd_input[1][0]);
             return NOT_ERROR;
           }
         }else if( numberOfWords == 1 && !argExpected[*cmd_id]  )
@@ -287,6 +293,7 @@ int splitStr(char words[][MAX_LENGTH], char *str, char separator, int max)
     if( *str == separator )
     {
       words[i++][j] = '\0';
+      j = 0;
     }else
     {
       words[i][j++] = *str;
