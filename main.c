@@ -65,41 +65,20 @@ void cellsInit(unsigned char cells[ROWS][COLS]);
 /* Funciones para linea de comando */
 void cmdLine(void);
 int splitStr(char words[][MAX_LENGTH], char *str, char separator, int max);
-unsigned char isValid(char *str);
-unsigned char isAlphanumeric(char c);
+unsigned char onlyNumbers(char *str);
+unsigned char onlyLetters(char *str);
+unsigned char isNumber(char c);
+unsigned char isLetter(char c);
 unsigned char commandFinder(char *str, char cmdList[][MAX_LENGTH], int cmd_length);
+char readConsole(int *cmd_id, int *arg);
 
 int main(void)
 {
   unsigned char cells[3][ROWS][COLS];
-  int seed, numberOfWords, i;
+  int seed;
   unsigned int stage = 1;
   char c, step = SHOW_GENERATION;
-  char input[MAX_LENGTH], cmd_input[MAX_CMD][MAX_LENGTH];
 
-  /* Constantes en memoria */
-  char commands[][MAX_LENGTH] = {"","rows", "cols", "start", "restart", "exit", "changes", "auto"};
-
-  scanf("%[^\n]", input);
-  numberOfWords = splitStr(cmd_input, input, ' ', MAX_CMD);
-  if( numberOfWords == ERROR )
-  {
-    printf("Hubo error al ingresar!\n");
-  }else
-  {
-    i = 0;
-    while( i < numberOfWords && isValid(&cmd_input[i][0]) )
-    {
-      i++;
-    }
-    if( i >= numberOfWords )
-    {
-      printf("El indice de comando: %d\n", commandFinder(&cmd_input[0][0], commands, 8));
-    }else
-    {
-      printf("Palabras no validas!\n");
-    }
-  }
   /* Inicializacion de parametros para el programa */
 /*
   seed = time(NULL);
@@ -132,6 +111,50 @@ int main(void)
 }
 
 /* Definicion de funciones */
+char readConsole(int *cmd_id, int *arg)
+{
+  /*
+  Esta funcion espera el ingreso
+  del usuario de un texto y lo procesa
+  para ver si existe o no un comando.
+  Devuelve ERROR si no hay comando.
+  */
+
+  char input[MAX_LENGTH], cmd_input[MAX_CMD][MAX_LENGTH];
+  char commands[][MAX_LENGTH] = {"","rows", "cols", "start", "restart", "exit", "changes", "auto"};
+  char argExpected[] = {0, 1, 1, 0, 0, 0, 1, 1};
+  int numberOfWords;
+
+  scanf("%[^\n]", input);   // Espero texto hasta que aprete enter
+
+  numberOfWords = splitStr(cmd_input, input, ' ', MAX_CMD); // Lo separo en partes por espacios
+
+  if( numberOfWords != ERROR )
+  {
+    if( onlyLetters(&cmd_input[0][0]) )
+    {
+      *cmd_id = commandFinder(&cmd_input[0][0], commands, 8);
+      if( *cmd_id == CMD_NONE ){
+        return NOT_ERROR;
+      }else
+      {
+        if( numberOfWords > 1 && argExpected[*cmd_id] )
+        {
+          if( onlyNumbers(%cmd_input[0][1]) )
+          {
+            return NOT_ERROR;
+          }
+        }else if( numberOfWords == 1 && !argExpected[*cmd_id]  )
+        {
+          return NOT_ERROR;
+        }
+      }
+    }
+  }
+
+  return ERROR;
+}
+
 unsigned char commandFinder(char *str, char cmdList[][MAX_LENGTH], int cmd_length)
 {
   /*
@@ -164,38 +187,61 @@ unsigned char commandFinder(char *str, char cmdList[][MAX_LENGTH], int cmd_lengt
     return i-1;
   }
 }
-unsigned char isAlphanumeric(char c)
+
+unsigned char isNumber(char c)
 {
   /*
-  Comprueba que el caracter
-  sea el ascii de una letra o numero
+  Compruebo que sea
+  un numero en ascii
   */
 
-  if( c < 'a' || c > 'z' )
+  return (c >= '0' && c <= '9');
+}
+
+unsigned char isLetter(char c)
+{
+  /*
+  Compruebo que sea una
+  letra en ascii
+  */
+
+  if( c < 'a' && c > 'z' )
   {
-    if( c < 'A' || c > 'Z' )
+    if( c < 'A' && c > 'Z' )
     {
-      if( c < '0' || c > '9' )
-      {
-        return FALSE;
-      }
+      return FALSE;
     }
   }
   return TRUE;
-
 }
 
-unsigned char isValid(char *str)
+unsigned char onlyNumbers(char *str)
 {
-  /*
-  Verifica que el string sea valido, es decir,
-  contenga unicamente solo letras o numeros
-  */
+  /* Compruebo que
+  el string se componga unicamente
+  de numeros */
+
   unsigned char check = TRUE;
 
   while( *str && check )
   {
-    check = isAlphanumeric( *str++ );
+    check = isNumber( *str++ );
+  }
+
+  return check;
+}
+
+unsigned char onlyLetters(char *str)
+{
+  /* Compruebo que el
+  string contenga solamente
+  letras en ascii */
+
+  unsigned char check = TRUE;
+
+  while( *str && check )
+  {
+    check = isLetter( *str++ );
   }
 
   return check;
