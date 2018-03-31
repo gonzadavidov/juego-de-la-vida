@@ -124,8 +124,14 @@ unsigned char isValid(char *str)
   Verifica que el string sea valido, es decir,
   contenga unicamente solo letras o numeros
   */
+  unsigned char check = TRUE;
 
-  while( *str )
+  while( *str && check )
+  {
+    check = isAlphanumeric( *str++ );
+  }
+
+  return check;
 }
 
 int splitStr(char words[][MAX_LENGTH], char *str, char separator, int max)
