@@ -4,22 +4,24 @@
 
 /* Constantes del juego de la vida */
 
-#define ROWS 10           // Cantidad de filas del mundo 2D
-#define COLS 10           // Cantidad de columnas del mundo 2D
+#define ROWS        15    // Cantidad de filas del mundo 2D
+#define COLS        15    // Cantidad de columnas del mundo 2D
 #define CELL_ALIVE  0xFF  // Cuando una celula esta viva
 #define CELL_DEAD   0x00  // Cuando una celula esta muerta
 #define CELL_BORN   0xF0  // Cuando una celula acaba de nacer
 #define CELL_DYING  0x0F  // Cuando una celula acaba de morir
 
-#define ACTUAL_CELLS 0
-#define FUTURE_CELLS 1
+#define ACTUAL_CELLS  0
+#define FUTURE_CELLS  1
 #define CHANGED_CELLS 2
 
 #define ERROR    -1       // Como se devuelven errores
 #define NOT_ERROR 0
+#define TRUE      1
+#define FALSE     0
 
-#define TRUE  1
-#define FALSE 0
+#define SHOW_GENERATION 0
+#define SHOW_CHANGES    1
 
 /* Constantes sistema unix */
 #define ANSI_COLOR_RED     "\x1b[31m"
@@ -29,6 +31,7 @@
 #define ANSI_COLOR_MAGENTA "\x1b[35m"
 #define ANSI_COLOR_CYAN    "\x1b[36m"
 #define ANSI_COLOR_RESET   "\x1b[0m"
+#define COMMAND_LINE       "\x1b[30;47m"
 
 /* Funciones control de cambio entre generaciones */
 unsigned char isInside(int row, int col, int maxRow, int maxCol);
@@ -55,20 +58,32 @@ int main(void)
   unsigned char cells[3][ROWS][COLS];
   int seed;
   unsigned int stage = 1;
-  char c;
+  char c, step = SHOW_GENERATION;
 
   /* Inicializacion de parametros para el programa */
   seed = time(NULL);
   srandom(seed);
   createNewCells(cells[ACTUAL_CELLS]);
   cellsInit(cells[FUTURE_CELLS]);
+  copyArray(cells[ACTUAL_CELLS], cells[CHANGED_CELLS]);
 
   do
   {
     clearScreen();
-    printScreen(cells[ACTUAL_CELLS], stage++);
-    cellsStateUpdate(cells[ACTUAL_CELLS], cells[FUTURE_CELLS], cells[CHANGED_CELLS]);
-    copyArray(cells[FUTURE_CELLS], cells[ACTUAL_CELLS]);
+    switch( step )
+    {
+      case SHOW_GENERATION:
+        printScreen(cells[ACTUAL_CELLS], stage++);
+        cellsStateUpdate(cells[ACTUAL_CELLS], cells[FUTURE_CELLS], cells[CHANGED_CELLS]);
+        copyArray(cells[FUTURE_CELLS], cells[ACTUAL_CELLS]);
+        step = SHOW_CHANGES;
+        break;
+      case SHOW_CHANGES:
+        printScreen(cells[CHANGED_CELLS], stage);
+        fixChanges(cells[CHANGED_CELLS]);
+        step = SHOW_GENERATION;
+        break;
+    }
     c = getchar();
   }while( c != 'Q' );
 
@@ -76,6 +91,32 @@ int main(void)
 }
 
 /* Definicion de funciones */
+void fixChanges(unsigned char cells[ROWS][COLS])
+{
+  /*
+  Toma la matriz con los cambios
+  y a aquellas celulas que estan en cambio
+  la fija de forma permanente
+  en viva o muerta
+  */
+
+  unsigned int i, j;
+
+  for(i = 0 ; i < ROWS ; i++)
+  {
+    for(j = 0 ; j < COLS ; j++)
+    {
+      if( cells[i][j] == CELL_BORN )
+      {
+        cells[i][j] = CELL_ALIVE;
+      }else if( cells[i][j] == CELL_DYING )
+      {
+        cells[i][j] = CELL_DEAD;
+      }
+    }
+  }
+}
+
 void cellsInit(unsigned char cells[ROWS][COLS])
 {
   /*
@@ -177,6 +218,8 @@ void printScreen(unsigned char cells[ROWS][COLS], unsigned int stage)
 
   printf("\n\n");
   printf("Celula *: Viva\t\t" ANSI_COLOR_RED "Celula *: Acaba de morir\t" ANSI_COLOR_GREEN "Celula *: Acaba de nacer" ANSI_COLOR_RESET "\n");
+
+  printf(COMMAND_LINE "       " ANSI_COLOR_RESET);
 }
 
 void clearScreen(void)
