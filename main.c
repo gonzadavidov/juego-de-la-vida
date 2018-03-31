@@ -108,11 +108,14 @@ int main(void)
         finish = TRUE;
         break;
       case CMD_START: case CMD_RESTART:
-        createNewCells(cells[ACTUAL_CELLS]);
-        cellsInit(cells[FUTURE_CELLS]);
-        copyArray(cells[ACTUAL_CELLS], cells[CHANGED_CELLS]);
-        copyArray(cells[ACTUAL_CELLS], cellBoard);
-        stage = 1;
+        if( cmd_id == CMD_RESTART || (cmd_id == CMD_START && !stage) )
+        {
+          createNewCells(cells[ACTUAL_CELLS]);
+          cellsInit(cells[FUTURE_CELLS]);
+          copyArray(cells[ACTUAL_CELLS], cells[CHANGED_CELLS]);
+          copyArray(cells[ACTUAL_CELLS], cellBoard);
+          stage = 1;
+        }
         break;
       default:
         if( !newGeneration || !showChanges )
