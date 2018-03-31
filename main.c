@@ -11,6 +11,10 @@
 #define CELL_DEAD   0x00  // Cuando una celula esta muerta
 #define CELL_BORN   0xF0  // Cuando una celula acaba de nacer
 #define CELL_DYING  0x0F  // Cuando una celula acaba de morir
+#define MAX_DELAY   2000
+#define MIN_DELAY   100
+#define MAX_AUTO    50
+#define MIN_AUTO    1
 
 /* Comandos */
 #define CMD_NONE    0
@@ -19,6 +23,7 @@
 #define CMD_EXIT    3
 #define CMD_CHANGES 4
 #define CMD_AUTO    5
+#define CMD_TIME    6
 
 /* Identificadores de matriz 2D en la 3D */
 #define CURRENT_CELLS  0
@@ -56,6 +61,7 @@ void createNewCells(unsigned char cells[ROWS][COLS]);
 void copyArray(unsigned char from[ROWS][COLS], unsigned char to[ROWS][COLS]);
 void fixChanges(unsigned char cells[ROWS][COLS]);
 void cellsInit(unsigned char cells[ROWS][COLS]);
+void delay(int delayTime);
 
 /* Funciones para linea de comando */
 int splitStr(char words[][MAX_LENGTH], char *str, char separator, int max);
@@ -72,6 +78,7 @@ int main(void)
   unsigned char cells[3][ROWS][COLS], cellBoard[ROWS][COLS];
   int seed, cmd_id = 0, arg = 0;
   unsigned int stage = 0;
+  int delayTime = 500;
   unsigned char finish = FALSE, showChanges = TRUE, newGeneration = FALSE, autoMode = FALSE;
 
   /* Inicializacion de parametros para el programa */
@@ -84,13 +91,18 @@ int main(void)
 
   while( !finish )
   {
-    clearScreen();                    // limpio la pantalla
-    printScreen(cellBoard, stage);    // e imprimo el nuevo estado de ella
-    readConsole(&cmd_id, &arg);       // espero recibir ingreso de teclado
-    clearBuffer();                    // limpio el buffer
-
     do
     {
+      clearScreen();                    // limpio la pantalla
+      printScreen(cellBoard, stage);    // e imprimo el nuevo estado de ella
+      if( autoMode )
+      {
+        delay(delayTime);
+      }else
+      {
+        readConsole(&cmd_id, &arg);       // espero recibir ingreso de teclado
+        clearBuffer();                    // limpio el buffer
+      }
       if( autoMode && !arg )
       {
         autoMode = FALSE;             // si repeti todo, apago auto mode
@@ -100,10 +112,19 @@ int main(void)
       }
 
       switch( cmd_id ){           // segun cual sea el comando ingresado
+        case CMD_TIME:
+          if( arg >= MIN_DELAY && arg <= MAX_DELAY )
+          {
+            delayTime = arg;
+          }
+          break;
         case CMD_AUTO:
-          cmd_id = CMD_NONE;
-          arg = arg*2 - 1;
-          autoMode = TRUE;      // activo el modo automatico
+          if( arg >= MIN_AUTO && arg <= MAX_AUTO)
+          {
+            cmd_id = CMD_NONE;
+            arg = showChanges? arg*2-1:arg-1;
+            autoMode = TRUE;      // activo el modo automatico
+          }
           break;
         case CMD_CHANGES:
           if( arg )
@@ -160,6 +181,19 @@ int main(void)
 }
 
 /* Definicion de funciones */
+void delay(int delayTime)
+{
+  clock_t t1, t2;
+  long int dif;
+
+  t1 = clock();
+  do
+  {
+    t2 = clock();
+    dif = ((t2 - t1) * 1000) / CLOCKS_PER_SEC;
+  }while( dif < delayTime );
+}
+
 void clearBuffer(void)
 {
   /*
@@ -200,10 +234,11 @@ void readConsole(int *cmd_id, int *arg)
   */
 
   char input[MAX_LENGTH], cmd_input[MAX_CMD][MAX_LENGTH];
-  char commands[][MAX_LENGTH] = {"", "start", "restart", "exit", "changes", "auto"};
-  char argExpected[] = {0, 0, 0, 0, 1, 1};
+  char commands[][MAX_LENGTH] = {"", "start", "restart", "exit", "changes", "auto", "time"};
+  char argExpected[] = {0, 0, 0, 0, 1, 1, 1};
   int numberOfWords;
 
+  printf("\n\n[COMANDO] -> ");
   scanf("%[^\n]", input);   // Espero texto hasta que aprete enter
 
   numberOfWords = splitStr(cmd_input, input, ' ', MAX_CMD); // Lo separo en partes por espacios
@@ -211,7 +246,7 @@ void readConsole(int *cmd_id, int *arg)
   {
     if( onlyLetters(&cmd_input[0][0]) )     // me fijo que el comando tenga solo letras
     {
-      *cmd_id = commandFinder(&cmd_input[0][0], commands, 6); // identifico el comando
+      *cmd_id = commandFinder(&cmd_input[0][0], commands, 7); // identifico el comando
       if( *cmd_id != CMD_NONE )
       {
         if( numberOfWords > 1 && argExpected[*cmd_id] ) // si espera argumento, y los recibe
@@ -496,10 +531,10 @@ void printScreen(unsigned char cells[ROWS][COLS], unsigned int stage)
   printf("\texit: Salir del juego\n");
   printf("\trestart: Reiniciar el juego\n");
   printf("\tstart: Iniciar el juego\n");
-  printf("\tauto n: Saltar n generaciones\n");
+  printf("\tauto n: Saltar n generaciones (min-%d max-%d)\n", MIN_AUTO, MAX_AUTO);
+  printf("\ttime n: En modo auto, espera n milisegundos (min-%d max-%d)\n", MIN_DELAY, MAX_DELAY);
   printf("\tchanges 0/1: Desactivar/Activar mostrar cambios entre generacion\n");
   printf("Cualquier otra cosa cambia a la proxima generacion\n");
-  printf("\n\n[COMANDO] -> ");
 }
 
 void clearScreen(void)
