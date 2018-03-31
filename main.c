@@ -13,14 +13,14 @@
 #define CELL_DYING  0x0F  // Cuando una celula acaba de morir
 
 /* Comandos */
-#define NONE    0
-#define ROWS    1
-#define COLS    2
-#define START   3
-#define RESTART 4
-#define EXIT    5
-#define CHANGES 6
-#define AUTO    7
+#define CMD_NONE    0
+#define CMD_ROWS    1
+#define CMD_COLS    2
+#define CMD_START   3
+#define CMD_RESTART 4
+#define CMD_EXIT    5
+#define CMD_CHANGES 6
+#define CMD_AUTO    7
 
 /* Identificadores de matriz 2D en la 3D */
 #define ACTUAL_CELLS  0
@@ -72,14 +72,36 @@ unsigned char commandFinder(char *str, char cmdList[][MAX_LENGTH], int cmd_lengt
 int main(void)
 {
   unsigned char cells[3][ROWS][COLS];
-  int seed;
+  int seed, numberOfWords, i;
   unsigned int stage = 1;
   char c, step = SHOW_GENERATION;
+  char input[MAX_LENGTH], cmd_input[MAX_CMD][MAX_LENGTH];
 
   /* Constantes en memoria */
-  char commands[][MAX_LENGTH] = {,"rows", "cols", "start", "restart", "exit", "changes", "auto"};
+  char commands[][MAX_LENGTH] = {"","rows", "cols", "start", "restart", "exit", "changes", "auto"};
 
+  scanf("%[^\n]", input);
+  numberOfWords = splitStr(cmd_input, input, ' ', MAX_CMD);
+  if( numberOfWords == ERROR )
+  {
+    printf("Hubo error al ingresar!\n");
+  }else
+  {
+    i = 0;
+    while( i < numberOfWords && isValid(&cmd_input[i][0]) )
+    {
+      i++;
+    }
+    if( i >= numberOfWords )
+    {
+      printf("El indice de comando: %d\n", commandFinder(&cmd_input[0][0], commands, 8));
+    }else
+    {
+      printf("Palabras no validas!\n");
+    }
+  }
   /* Inicializacion de parametros para el programa */
+/*
   seed = time(NULL);
   srandom(seed);
   createNewCells(cells[ACTUAL_CELLS]);
@@ -105,7 +127,7 @@ int main(void)
     }
     c = getchar();
   }while( c != 'Q' );
-
+*/
   return 0;
 }
 
@@ -119,7 +141,7 @@ unsigned char commandFinder(char *str, char cmdList[][MAX_LENGTH], int cmd_lengt
   */
 
   unsigned int i, j;
-  unsigned char fount = FALSE;
+  unsigned char found = FALSE;
 
   for(i = 0 ; i < cmd_length && !found ; i++)
   {
@@ -136,7 +158,7 @@ unsigned char commandFinder(char *str, char cmdList[][MAX_LENGTH], int cmd_lengt
 
   if( i >= cmd_length )
   {
-    return NONE;
+    return CMD_NONE;
   }else
   {
     return i-1;
@@ -190,7 +212,6 @@ int splitStr(char words[][MAX_LENGTH], char *str, char separator, int max)
   */
 
   unsigned int i = 0, j = 0;
-
   while( *str && i < max && j < MAX_LENGTH )
   {
     if( *str == separator )
