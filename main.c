@@ -52,6 +52,7 @@ void createNewCells(unsigned char cells[ROWS][COLS]);
 void copyArray(unsigned char from[ROWS][COLS], unsigned char to[ROWS][COLS]);
 void fixChanges(unsigned char cells[ROWS][COLS]);
 void cellsInit(unsigned char cells[ROWS][COLS]);
+void cmdLine(void);
 
 int main(void)
 {
@@ -91,6 +92,18 @@ int main(void)
 }
 
 /* Definicion de funciones */
+void cmdLine(void)
+{
+  unsigned int i;
+
+  printf("\n\n" COMMAND_LINE);
+  for(i = 0 ; i < 80 ; i++)
+  {
+    printf(" ");
+  }
+  printf("\033[%d;0H", 9+ROWS);
+}
+
 void fixChanges(unsigned char cells[ROWS][COLS])
 {
   /*
@@ -219,7 +232,8 @@ void printScreen(unsigned char cells[ROWS][COLS], unsigned int stage)
   printf("\n\n");
   printf("Celula *: Viva\t\t" ANSI_COLOR_RED "Celula *: Acaba de morir\t" ANSI_COLOR_GREEN "Celula *: Acaba de nacer" ANSI_COLOR_RESET "\n");
 
-  printf(COMMAND_LINE "       " ANSI_COLOR_RESET);
+  cmdLine();
+  printf(ANSI_COLOR_RESET);
 }
 
 void clearScreen(void)
