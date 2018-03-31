@@ -3,7 +3,7 @@
 #include <time.h>
 
 /* Constantes del juego de la vida */
-
+#define MAX_CMD     2     // Maximas palabras en comando
 #define MAX_LENGTH  20    // Maximo largo de comandos
 #define ROWS        15    // Cantidad de filas del mundo 2D
 #define COLS        15    // Cantidad de columnas del mundo 2D
@@ -12,15 +12,25 @@
 #define CELL_BORN   0xF0  // Cuando una celula acaba de nacer
 #define CELL_DYING  0x0F  // Cuando una celula acaba de morir
 
+/* Comandos */
+#define NONE    0
+#define ROWS    1
+#define COLS    2
+#define START   3
+#define RESTART 4
+#define EXIT    5
+#define CHANGES 6
+#define AUTO    7
+
+/* Identificadores de matriz 2D en la 3D */
 #define ACTUAL_CELLS  0
 #define FUTURE_CELLS  1
 #define CHANGED_CELLS 2
 
-#define ERROR    -1       // Como se devuelven errores
-#define NOT_ERROR 0
-#define TRUE      1
-#define FALSE     0
-
+#define ERROR          -1       // Como se devuelven errores
+#define NOT_ERROR       0
+#define TRUE            1
+#define FALSE           0
 #define SHOW_GENERATION 0
 #define SHOW_CHANGES    1
 
@@ -57,7 +67,7 @@ void cmdLine(void);
 int splitStr(char words[][MAX_LENGTH], char *str, char separator, int max);
 unsigned char isValid(char *str);
 unsigned char isAlphanumeric(char c);
-unsigned char commandFinder(char *str, char *command, int *value);
+unsigned char commandFinder(char *str, char cmdList[][MAX_LENGTH], int cmd_length);
 
 int main(void)
 {
@@ -65,6 +75,9 @@ int main(void)
   int seed;
   unsigned int stage = 1;
   char c, step = SHOW_GENERATION;
+
+  /* Constantes en memoria */
+  char commands[][MAX_LENGTH] = {,"rows", "cols", "start", "restart", "exit", "changes", "auto"};
 
   /* Inicializacion de parametros para el programa */
   seed = time(NULL);
@@ -97,6 +110,38 @@ int main(void)
 }
 
 /* Definicion de funciones */
+unsigned char commandFinder(char *str, char cmdList[][MAX_LENGTH], int cmd_length)
+{
+  /*
+  Se fija si el string es uno de los
+  comandos que estan en la lista de
+  comandos y devuelve su identificador
+  */
+
+  unsigned int i, j;
+  unsigned char fount = FALSE;
+
+  for(i = 0 ; i < cmd_length && !found ; i++)
+  {
+    j = 0;
+    while( str[j] && cmdList[i][j] && str[j] == cmdList[i][j] )
+    {
+      j++;
+    }
+    if( !str[j] && !cmdList[i][j] )
+    {
+      found = TRUE;
+    }
+  }
+
+  if( i >= cmd_length )
+  {
+    return NONE;
+  }else
+  {
+    return i-1;
+  }
+}
 unsigned char isAlphanumeric(char c)
 {
   /*
