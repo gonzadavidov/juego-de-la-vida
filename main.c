@@ -38,7 +38,6 @@
 #define ANSI_COLOR_MAGENTA "\x1b[35m"
 #define ANSI_COLOR_CYAN    "\x1b[36m"
 #define ANSI_COLOR_RESET   "\x1b[0m"
-#define COMMAND_LINE       "\x1b[30;47m"
 
 /* Funciones control de cambio entre generaciones */
 unsigned char isInside(int row, int col, int maxRow, int maxCol);
@@ -59,7 +58,6 @@ void fixChanges(unsigned char cells[ROWS][COLS]);
 void cellsInit(unsigned char cells[ROWS][COLS]);
 
 /* Funciones para linea de comando */
-void cmdLine(void);
 int splitStr(char words[][MAX_LENGTH], char *str, char separator, int max);
 unsigned char onlyNumbers(char *str);
 unsigned char onlyLetters(char *str);
@@ -131,24 +129,27 @@ int main(void)
           }
           break;
         default:
-          if( !newGeneration || !showChanges )
+          if( stage )
           {
-            cellsStateUpdate(cells[ACTUAL_CELLS], cells[FUTURE_CELLS], cells[CHANGED_CELLS]);
-            copyArray(cells[FUTURE_CELLS], cells[ACTUAL_CELLS]);
-            if( showChanges )
+            if( !newGeneration || !showChanges )
             {
-              copyArray(cells[CHANGED_CELLS], cellBoard);
+              cellsStateUpdate(cells[ACTUAL_CELLS], cells[FUTURE_CELLS], cells[CHANGED_CELLS]);
+              copyArray(cells[FUTURE_CELLS], cells[ACTUAL_CELLS]);
+              if( showChanges )
+              {
+                copyArray(cells[CHANGED_CELLS], cellBoard);
+              }else
+              {
+                copyArray(cells[ACTUAL_CELLS], cellBoard);
+              }
+              stage++;
             }else
             {
+              fixChanges(cells[CHANGED_CELLS]);
               copyArray(cells[ACTUAL_CELLS], cellBoard);
             }
-            stage++;
-          }else
-          {
-            fixChanges(cells[CHANGED_CELLS]);
-            copyArray(cells[ACTUAL_CELLS], cellBoard);
+            newGeneration = ~newGeneration;
           }
-          newGeneration = ~newGeneration;
           break;
       }
     }while( autoMode );
@@ -363,18 +364,6 @@ int splitStr(char words[][MAX_LENGTH], char *str, char separator, int max)
   }
 }
 
-void cmdLine(void)
-{
-  unsigned int i;
-
-  printf("\n\n" COMMAND_LINE);
-  for(i = 0 ; i < 80 ; i++)
-  {
-    printf(" ");
-  }
-  printf("\033[%d;0H", 9+ROWS);
-}
-
 void fixChanges(unsigned char cells[ROWS][COLS])
 {
   /*
@@ -471,7 +460,7 @@ void printScreen(unsigned char cells[ROWS][COLS], unsigned int stage)
 
   unsigned int i, j;
 
-  printf("\t\t\t\t[EL JUEGO DE LA VIDA]\n");
+  printf(ANSI_COLOR_RESET "\t\t\t\t[EL JUEGO DE LA VIDA]\n");
   printf("Generacion N°: %d\n\n", stage);
 
   for(i = 0 ; i < ROWS ; i++)
@@ -503,8 +492,13 @@ void printScreen(unsigned char cells[ROWS][COLS], unsigned int stage)
   printf("\n\n");
   printf("Celula *: Viva\t\t" ANSI_COLOR_RED "Celula *: Acaba de morir\t" ANSI_COLOR_GREEN "Celula *: Acaba de nacer" ANSI_COLOR_RESET "\n");
 
-  cmdLine();
-  printf(ANSI_COLOR_RESET);
+  printf("\n\n| Guia de comandos |\n");
+  printf("\texit: Salir del juego\n");
+  printf("\trestart: Reiniciar el juego\n");
+  printf("\tstart: Iniciar el juego\n");
+  printf("\tauto n: Saltar n generaciones\n");
+  printf("\tchanges 0/1: Desactivar/Activar mostrar cambios entre generacion\n");
+  printf("\n\n[COMANDO] -> ");
 }
 
 void clearScreen(void)
@@ -512,7 +506,6 @@ void clearScreen(void)
   /*
   Limpia la pantalla de la terminal
   */
-
   system("clear");
 }
 
