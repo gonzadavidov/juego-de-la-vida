@@ -55,6 +55,7 @@ void cellsStateUpdate(unsigned char CURRENT[ROWS][COLS], unsigned char new[ROWS]
 void printScreen(unsigned char cells[ROWS][COLS], unsigned int stage);
 void clearScreen(void);
 void clearBuffer(void);
+char getString(char *str, int max_length);
 
 /* Funciones generales */
 void createNewCells(unsigned char cells[ROWS][COLS]);
@@ -101,7 +102,6 @@ int main(void)
       }else
       {
         readConsole(&cmd_id, &arg);       // espero recibir ingreso de teclado
-        clearBuffer();                    // limpio el buffer
       }
       if( autoMode && !arg )
       {
@@ -224,6 +224,32 @@ unsigned int toNumber(char *str)
   return number;
 }
 
+char getString(char *str, int max_length)
+{
+  /*
+  Esta funcion toma del teclado
+  un string, hasta que se presione enter,
+  y controla que se tome un maximo de letras
+  */
+  int i = 0;
+  char c;
+
+  while( (c = getchar()) != '\n' && i < max_length)
+  {
+    *str++ = c;   // guardo el caracter
+    i++;        // cuento una nueva letra
+  }
+
+  if( i >= max_length )
+  {
+    return ERROR;
+  }else
+  {
+    *str = '\0';
+    return NOT_ERROR;
+  }
+}
+
 void readConsole(int *cmd_id, int *arg)
 {
   /*
@@ -239,37 +265,43 @@ void readConsole(int *cmd_id, int *arg)
   int numberOfWords;
 
   printf("\n\n[COMANDO] -> ");
-  scanf("%[^\n]", input);   // Espero texto hasta que aprete enter
-
-  numberOfWords = splitStr(cmd_input, input, ' ', MAX_CMD); // Lo separo en partes por espacios
-  if( numberOfWords != ERROR )
+  if( getString(input, MAX_LENGTH) != ERROR )  // Espero texto hasta que aprete enter
   {
-    if( onlyLetters(&cmd_input[0][0]) )     // me fijo que el comando tenga solo letras
+    numberOfWords = splitStr(cmd_input, input, ' ', MAX_CMD); // Lo separo en partes por espacios
+
+    if( numberOfWords != ERROR )
     {
-      *cmd_id = commandFinder(&cmd_input[0][0], commands, 7); // identifico el comando
-      if( *cmd_id != CMD_NONE )
+      if( onlyLetters(&cmd_input[0][0]) )     // me fijo que el comando tenga solo letras
       {
-        if( numberOfWords > 1 && argExpected[*cmd_id] ) // si espera argumento, y los recibe
+        *cmd_id = commandFinder(&cmd_input[0][0], commands, 7); // identifico el comando
+        if( *cmd_id != CMD_NONE )
         {
-          if( onlyNumbers(&cmd_input[1][0]) )   // me fijo que sea numerico
+          if( numberOfWords > 1 && argExpected[*cmd_id] ) // si espera argumento, y los recibe
           {
-            *arg = toNumber(&cmd_input[1][0]);    // y lo guardo
-          }else
+            if( onlyNumbers(&cmd_input[1][0]) )   // me fijo que sea numerico
+            {
+              *arg = toNumber(&cmd_input[1][0]);    // y lo guardo
+            }else
+            {
+              *cmd_id = CMD_NONE;
+            }
+          }else if( numberOfWords > 1 && !argExpected[*cmd_id] )  // si recibe y no esperaba argumentos
           {
             *cmd_id = CMD_NONE;
+          }else if( numberOfWords == 1 && argExpected[*cmd_id]  ) // o si no recibe, pero esperaba
+          {
+            *cmd_id = CMD_NONE;   // se toma como que no hubo comando, para que siga a otra generacion
           }
-        }else if( numberOfWords > 1 && !argExpected[*cmd_id] )  // si recibe y no esperaba argumentos
-        {
-          *cmd_id = CMD_NONE;
-        }else if( numberOfWords == 1 && argExpected[*cmd_id]  ) // o si no recibe, pero esperaba
-        {
-          *cmd_id = CMD_NONE;   // se toma como que no hubo comando, para que siga a otra generacion
         }
+      }else
+      {
+        *cmd_id = CMD_NONE;
       }
-    }else
-    {
-      *cmd_id = CMD_NONE;
     }
+  }else
+  {
+    clearBuffer();                    // limpio el buffer
+    *cmd_id = CMD_NONE;
   }
 }
 
